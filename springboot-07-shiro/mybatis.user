@@ -1,0 +1,16 @@
+/*
+SQLyog Community v13.1.6 (64 bit)
+MySQL - 8.0.18 
+*********************************************************************
+*/
+/*!40101 SET NAMES utf8 */;
+
+create table `user` (
+	`id` int (20),
+	`name` varchar (90),
+	`pwd` varchar (90),
+	`perms` varchar (300)
+); 
+insert into `user` (`id`, `name`, `pwd`, `perms`) values('2','pan','123','user:add');
+insert into `user` (`id`, `name`, `pwd`, `perms`) values('3','panpan','456','user:update');
+insert into `user` (`id`, `name`, `pwd`, `perms`) values('6','root','123123','uesr:add,update');
