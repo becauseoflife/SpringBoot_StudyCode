@@ -2774,9 +2774,122 @@ public Docket docket3(){
 
 
 
+## SpringBoot任务
+
+#### 1、异步任务
+
+- 启动类开启异步注解功能：  `@EnableAsync`
+
+- 使用注解 `@Async`，告诉 spring 这是一个异步方法
+
+#### 2、邮件任务
+
+Java邮件发送代码：[https://github.com/becauseoflife/CodeDemo/tree/main/JavaDemo/JavaSeEmailDemo](https://github.com/becauseoflife/CodeDemo/tree/main/JavaDemo/JavaSeEmailDemo)
+
+JavaWeb邮件发送代码： [https://github.com/becauseoflife/CodeDemo/tree/main/JavaDemo/JavaSeEmailDemo](https://github.com/becauseoflife/CodeDemo/tree/main/JavaDemo/JavaSeEmailDemo)
+
+引入启动器：
+
+```xml
+<!-- javax.mail -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-mail</artifactId>
+</dependency>
+```
+
+进行配置：
+
+```properties
+spring.mail.host=smtp.qq.com
+spring.mail.username=1752196851@qq.com
+spring.mail.password= QQ邮箱->设置->开启服务：POP3/SMTP服务->获取授权码
+# 开启加密验证
+spring.mail.properties.mail.smtp.ssl.enable=true
+```
+
+进行测试：
+
+```java
+@Autowired
+JavaMailSenderImpl javaMailSender;
+
+@Test
+void contextLoads() {
+    // 一个简单的邮件发送
+    SimpleMailMessage message = new SimpleMailMessage();
+
+    message.setSubject("面包你好");
+    message.setText("Java系列课程");
+
+    message.setTo("1752196851@qq.com");
+    message.setFrom("1752196851@qq.com");
+
+    javaMailSender.send(message);
+}
+    @Test
+    void contextLoads2() throws MessagingException {
+        // 一个复杂的邮件发送
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        // 组装
+        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
+        
+        helper.setSubject("面包你好");
+        helper.setText("<h2 style='color:blue'>面包你好</h2>", true);
+        
+        // 附件
+        helper.addAttachment("1.jpg", new File("D:\\Desktop\\面包\\图片\\test11.png"));
+
+        helper.setTo("1752196851@qq.com");
+        helper.setFrom("1752196851@qq.com");
+
+        javaMailSender.send(mimeMessage);
+    }
+```
+
+#### 3、定时任务
+
+```java
+关键：
+    TaskExecutor  任务执行者
+    TaskScheduler 任务调度者
+    @EnableScheduling
+    @Scheduled(cron="表达式")
+```
+
+启动类，开启定时功能的注解： `@EnableScheduling`
+
+#### Cron表达式
+
+[Cron](https://baike.baidu.com/item/cron/10952601?fr=aladdin)
+
+计划任务，是任务在约定的时间执行已经计划好的工作，这是表面的意思。在Linux中，我们经常用到 cron 服务器来完成这项工作。cron服务器可以根据配置文件约定的时间来执行特定的任务。
+
+crontab文件的格式：M H D m d cmd.
+
+M: 分钟（0-59）。
+
+H：小时（0-23）。
+
+D：天（1-31）。
+
+m: 月（1-12）。
+
+d: 一星期内的天（0~7，0,7为星期天，6为星期六）。
+
+cmd: 要执行的命令。
+
+除了数字还有几个个特殊的符号就是"*"、"/"和"-"、","，*代表所有的取值范围内的数字，"/"代表每的意思,"*/5"表示每5个单位，"-"代表从某个数字到某个数字,","分开几个离散的数字。
+
+如 ： 
+
+```
+ 0 * * * * 0-7
+秒 分 时 日 月 周几
+```
+
+[Cron在线生成器](https://cron.qqe2.com/)
 
 
 
-
-
-
+方法上使用 `@Scheduled(cron="表达式")` 注解，即可实现定时方法的执行。
