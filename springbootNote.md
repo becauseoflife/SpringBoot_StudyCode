@@ -2893,3 +2893,352 @@ cmd: 要执行的命令。
 
 
 方法上使用 `@Scheduled(cron="表达式")` 注解，即可实现定时方法的执行。
+
+
+
+
+
+## RPC
+
+#### 什么是RPC?
+
+RPC是远程过程调用（Remote Procedure Call）的缩写形式。
+
+以下文字来源网站：[https://developer.51cto.com/art/201906/597963.htm](https://developer.51cto.com/art/201906/597963.htm)
+
+RPC(Remote Procedure Call)：远程过程调用，它是一种通过网络从远程计算机程序上请求服务，而不需要了解底层网络技术的思想。
+
+RPC 是一种技术思想而非一种规范或协议，常见 RPC 技术和框架有：
+
+- 应用级的服务框架：阿里的 Dubbo/Dubbox、Google gRPC、Spring Boot/Spring Cloud。
+- 远程通信协议：RMI、Socket、SOAP(HTTP XML)、REST(HTTP JSON)。
+- 通信框架：MINA 和 Netty。
+
+目前流行的开源 RPC 框架还是比较多的，有阿里巴巴的 Dubbo、Facebook 的 Thrift、Google 的 gRPC、Twitter 的 Finagle 等。
+
+下面重点介绍三种：
+
+- gRPC：是 Google 公布的开源软件，基于***的 HTTP 2.0 协议，并支持常见的众多编程语言。RPC 框架是基于 HTTP 协议实现的，底层使用到了 Netty 框架的支持。
+- Thrift：是 Facebook 的开源 RPC 框架，主要是一个跨语言的服务开发框架。用户只要在其之上进行二次开发就行，应用对于底层的 RPC 通讯等都是透明的。不过这个对于用户来说需要学习特定领域语言这个特性，还是有一定成本的。
+
+- Dubbo：是阿里集团开源的一个极为出名的 RPC 框架，在很多互联网公司和企业应用中广泛使用。协议和序列化框架都可以插拔是极其鲜明的特色。
+
+阅读文章：[https://www.jianshu.com/p/2accc2840a1b](https://www.jianshu.com/p/2accc2840a1b)
+
+
+
+## Dubbo
+
+#### 什么是Dubbo?
+
+Apache Dubbo 是一款微服务开发框架，它提供了 RPC通信 与 微服务治理 两大关键能力。这意味着，使用 Dubbo 开发的微服务，将具备相互之间的远程发现与通信能力， 同时利用 Dubbo 提供的丰富服务治理能力，可以实现诸如服务发现、负载均衡、流量调度等服务治理诉求。同时 Dubbo 是高度可扩展的，用户几乎可以在任意功能点去定制自己的实现，以改变框架的默认行为来满足自己的业务需求。
+
+Apache Dubbo是一款高性能、轻量级的开源Java RPC框架，它提供了三大核心能力：面向接口的远程方法调用，智能容错和负载均衡，以及服务自动注册和发现。
+
+
+
+Dubbo 基于消费端的自动服务发现能力，其基本工作原理如下图：
+
+![Architecture](https://camo.githubusercontent.com/e11a2ff9575abc290657ba3fdbff5d36f1594e7add67a72e0eda32e449508eef/68747470733a2f2f647562626f2e6170616368652e6f72672f696d67732f6172636869746563747572652e706e67)
+
+**服务提供者**(**Provider**): 	暴露服务的服务提供方，服务提供者在启动时，向注册中心注册自己提供的服务。
+
+**服务消费者**(**Consumer**):	调用远程服务的服务消费方，服务消费者在启动时，向注册中心订阅自己所需的服务，服务消费者，从提供者地址列表中，基于软负载均衡算法，选一台提供者进行调用，如果调用失败，再选另一台调用。
+
+**注册中心**(**Registry**):	注册中心返回服务提供者地址列表给消费者，如果有变更，注册中心将基于长连接推送变更数据给消费者
+
+**监控中心**(**Monitor**):	服务消费者和提供者，在内存中累计调用次数和调用时间，定时每分钟发送一次统计数据到监控中心
+
+
+
+#### ZooKeeper环境搭建
+
+[Dubbo 官方文档](https://dubbo.apache.org/zh/docs/references/registry/)推荐使用 [Zookeeper 注册中心](https://dubbo.apache.org/zh/docs/references/registry/zookeeper)
+
+什么是Zookeeper? 官方文档：[http://zookeeper.apache.org/](http://zookeeper.apache.org/)
+
+Apache ZooKeeper 致力于开发和维护一个开源服务器，该服务器支持高度可靠的分布式协调。
+
+Apache ZooKeeper 是一个分布式的，开放源码的分布式应用程序协调服务，是Hadoop和[Hbase](https://baike.baidu.com/item/Hbase/7670213)的重要组件。
+
+Apache ZooKeeper 是一个为分布式应用提供一致性服务的软件，提供的功能包括：配置维护、域名服务、分布式同步、组服务等。
+
+Apache ZooKeeper 的目标就是封装好复杂易出错的关键服务，将简单易用的接口和性能高效、功能稳定的系统提供给用户。
+
+Apache ZooKeeper 包含一个简单的原语集，提供Java和C的接口。
+
+
+
+> <p style="color:green">Windows下载安装 zookeeper</p>
+
+**zookeeper下载地址：**[https://dlcdn.apache.org/zookeeper/](https://dlcdn.apache.org/zookeeper/) 
+
+**3.5.5版本开始，下载带有bin的包才可以直接使用，里面有编译后的二进制的包，而之前的普通的tar.gz的包里面是只是源码的包无法直接使用。**
+
+解压后在 **`conf/`** 目录下 **zoo_sample.cfg** 复制一份改名为 **`zoo.cfg`** 加上配置：
+
+```properties
+# 需建立对应目录
+dataDir=E:\\bigdata\\apache-zookeeper-3.7.0\\datas
+# dataLogDir=E:\\bigdata\\apache-zookeeper-3.7.0\\logs
+```
+
+运行 **`bin/zkServer.cmd`**
+
+*闪退解决：在文件末尾加上 `pause` 命令：
+
+```cmd
+setlocal
+call "%~dp0zkEnv.cmd"
+
+set ZOOMAIN=org.apache.zookeeper.server.quorum.QuorumPeerMain
+set ZOO_LOG_FILE=zookeeper-%USERNAME%-server-%COMPUTERNAME%.log
+
+echo on
+call %JAVA% "-Dzookeeper.log.dir=%ZOO_LOG_DIR%" "-Dzookeeper.root.logger=%ZOO_LOG4J_PROP%" "-Dzookeeper.log.file=%ZOO_LOG_FILE%" "-XX:+HeapDumpOnOutOfMemoryError" "-XX:OnOutOfMemoryError=cmd /c taskkill /pid %%%%p /t /f" -cp "%CLASSPATH%" %ZOOMAIN% "%ZOOCFG%" %*
+pause
+endlocal
+```
+
+
+
+运行 **`bin/zkServer.cmd`** 后运行 **`bin/zkCli.cmd`** 进行测试， 输入命令:
+
+``` cmd
+ls /   # ==> 会打印出 [zookeeper]
+```
+
+
+
+#### Dubbo环境搭建
+
+dubbo 本身并不是一个服务软件。它其实就是一个jar包，能够帮你的 java 程序连接到 zookeeper，并利用 zookeeper 消费、提供服务。
+但是为了让用户更好的管理监控众多的dubbo服务，官方提供了一个可视化的监控程序 **dubbo-admin**，不过这个监控即使不装也不影响使用。
+
+##### 1、下载 **dubbo-admin** 
+
+[https://github.com/apache/dubbo-admin/tree/master-0.2.0]( https://github.com/apache/dubbo-admin/tree/master-0.2.0)
+
+##### 2、解压进入目录
+
+修改 **`dubbo-admin-master-0.2.0\dubbo-admin\src\main\resources\application.properties`**  指定 zookeeper 的地址：
+
+```properties
+server.port=7001
+spring.velocity.cache=false
+spring.velocity.charset=UTF-8
+spring.velocity.layout-url=/templates/default.vm
+spring.messages.fallback-to-system-locale=false
+spring.messages.basename=i18n/message
+spring.root.password=root
+spring.guest.password=guest
+# 注册中心的地址
+dubbo.registry.address=zookeeper://127.0.0.1:2181
+```
+
+##### 3、 在项目目录下打包 dubbo-admin
+
+```sh
+mvn clean package -Dmaven.test.skip=true
+```
+
+##### 4、 执行 **`dubbo-admin-master-0.2.0\dubbo-admin\target\dubbo-admin-0.0.1-SNAPSHOT.jar`**   ，要开启 zookeeper 的 **zkServer.cmd** 服务。
+
+```sh
+java -jar dubbo-admin-0.0.1-SNAPSHOT.jar
+```
+
+##### 5、 输入地址访问：
+
+```properties
+用户名： root  密码： root
+http://localhost:7001/  
+```
+
+![image-20211122222215913](D:\IDEA\B站_狂神说\SpringBoot\springbootNote.assets\image-20211122222215913.png)
+
+
+
+**zookeeper:** 注册中心
+
+**dubbo-admin: **是一个监控管理后台
+
+**Dubbo:** Jar包
+
+
+
+#### **SpringBoot + Dubbo + Zookeeper**
+
+未读文章：[https://www.cnblogs.com/lxhaaron/p/14123337.html](https://www.cnblogs.com/lxhaaron/p/14123337.html)
+
+##### 1、IDEA 创建 SpringBoot 项目作为提供者
+
+勾选spring web，项目目录结构：
+
+![image-20211124213604723](D:\IDEA\B站_狂神说\SpringBoot\springbootNote.assets\image-20211124213604723.png)
+
+
+
+##### 2、导入依赖
+
+Dubbo 依赖：
+
+```xml
+<!-- https://mvnrepository.com/artifact/org.apache.dubbo/dubbo-spring-boot-starter -->
+<dependency>
+    <groupId>org.apache.dubbo</groupId>
+    <artifactId>dubbo-spring-boot-starter</artifactId>
+    <version>2.7.8</version>
+</dependency>
+```
+
+Zookeeper 依赖
+
+```xml
+<!-- https://mvnrepository.com/artifact/com.github.sgroschupf/zkclient -->
+<dependency>
+    <groupId>com.github.sgroschupf</groupId>
+    <artifactId>zkclient</artifactId>
+    <version>0.1</version>
+</dependency>
+
+<!-- 日志会冲突 -->
+<!-- 引入Zookeeper -->
+<!-- https://mvnrepository.com/artifact/org.apache.curator/curator-framework -->
+<dependency>
+    <groupId>org.apache.curator</groupId>
+    <artifactId>curator-framework</artifactId>
+    <version>5.2.0</version>
+</dependency>
+<!-- https://mvnrepository.com/artifact/org.apache.curator/curator-recipes -->
+<dependency>
+    <groupId>org.apache.curator</groupId>
+    <artifactId>curator-recipes</artifactId>
+    <version>5.2.0</version>
+</dependency>
+<!-- https://mvnrepository.com/artifact/org.apache.zookeeper/zookeeper -->
+<dependency>
+    <groupId>org.apache.zookeeper</groupId>
+    <artifactId>zookeeper</artifactId>
+    <version>3.7.0</version>
+    <!-- 排除这个依赖 -->
+    <exclusions>
+        <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+
+```
+
+##### 3、编写配置文件
+
+```properties
+server.port=8082
+
+# 服务器应用的名字
+dubbo.application.name=provider-server
+# 注册中心的地址
+dubbo.registry.address=zookeeper://127.0.0.1:2181
+# 哪些服务要被注册
+dubbo.scan.base-packages=com.example.service
+```
+
+##### 4、编写接口测试
+
+```java
+import org.apache.dubbo.config.annotation.DubboService;
+import org.springframework.stereotype.Component;
+
+// Zookeeper 服务注册与发现
+
+@DubboService   // 可以被扫描到，在项目启动就自动注册到注册中心
+@Component      // 使用了 Dubbo，尽量不使用 @Service 注解
+public class TicketServiceImpl implements TicketService {
+    @Override
+    public String getTicket() {
+        return "面包";
+    }
+}
+```
+
+使用 `@DubboService ` 注解时，主类要开启注解
+
+```java
+@SpringBootApplication
+@EnableDubbo         // 开启 Dubbo 的注解
+public class ProviderServerApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ProviderServerApplication.class, args);
+    }
+}
+```
+
+##### 5、运行 zookeeper 和 dubbo-admin  服务
+
+运行 **`bin/zkServer.cmd`**
+
+执行 **`java -jar dubbo-admin-0.0.1-SNAPSHOT.jar`**
+
+##### 6、登录 dubbo-admin 即可看到对应信息
+
+![image-20211124214154133](D:\IDEA\B站_狂神说\SpringBoot\springbootNote.assets\image-20211124214154133.png)
+
+![image-20211124214206872](D:\IDEA\B站_狂神说\SpringBoot\springbootNote.assets\image-20211124214206872.png)
+
+
+
+##### 7、IDEA 创建 SpringBoot 项目作为消费者
+
+![image-20211124215816051](D:\IDEA\B站_狂神说\SpringBoot\springbootNote.assets\image-20211124215816051.png)
+
+##### 8、编写配置
+
+```properties
+server.port=8081
+
+# 消费者去哪里拿服务需要暴露自己的名字
+dubbo.application.name=consumer-server
+# 注册中心的地址
+dubbo.registry.address=zookeeper://127.0.0.1:2181
+```
+
+##### 9、远程注入
+
+```java
+import org.apache.dubbo.config.annotation.DubboReference;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserService {
+    // 获取 provider-server 提供的票, 要去注册中心拿到服务
+    @DubboReference  // 引用-> 1.pom坐标 2.定义路径相同的接口名 即com.example.service.TicketService
+    TicketService ticketService;
+
+    public void buyTicket(){
+        String ticket = ticketService.getTicket();
+        System.out.println("在注册中心拿到==>" + ticket);
+    }
+}
+```
+
+##### 10、进行测试
+
+```java
+@SpringBootTest
+class ConsumerServerApplicationTests {
+
+    @Autowired
+    UserService userService;
+
+    @Test
+    void contextLoads() {
+        userService.buyTicket();
+    }
+}
+```
+
+![image-20211124220320726](D:\IDEA\B站_狂神说\SpringBoot\springbootNote.assets\image-20211124220320726.png)
+
+**注意： Zookeeper 服务要开启**
